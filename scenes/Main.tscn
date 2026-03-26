@@ -1,0 +1,68 @@
+[gd_scene load_steps=3 format=3 uid="uid://b4l1j2yxqvxkp"]
+
+[ext_resource type="Script" path="res://scripts/GameManager.gd" id="1_1l6dt"]
+[ext_resource type="Script" path="res://scripts/StatsPanel.gd" id="2_2m7ek"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_1l6dt")
+
+[node name="TileMap" type="TileMap" parent="."]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+enabled = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="StatsPanel" type="Panel" parent="UI"]
+offset_right = 250.0
+offset_bottom = 720.0
+script = ExtResource("2_2m7ek")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/StatsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+
+[node name="Title" type="Label" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "AI Simulation Stats"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="AgentCount" type="Label" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Agents: 0"
+
+[node name="AvgHunger" type="Label" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Avg Hunger: 0.0"
+
+[node name="AvgEnergy" type="Label" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Avg Energy: 0.0"
+
+[node name="AvgTrust" type="Label" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Avg Trust: 0.0"
+
+[node name="HSeparator2" type="HSeparator" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ResourceCount" type="Label" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Resources: 0"
+
+[node name="ConflictCount" type="Label" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Conflicts: 0"
+
+[node name="TradeCount" type="Label" parent="UI/StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Trades: 0"
