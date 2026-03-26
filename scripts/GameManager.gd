@@ -19,6 +19,10 @@ var total_conflicts = 0
 var total_trades = 0
 
 func _ready():
+	# Load configuration
+	ConfigManager.load_environment("development")
+	ConfigManager.apply_to_game_manager(self)
+	
 	setup_tilemap()
 	spawn_resources()
 	spawn_agents()

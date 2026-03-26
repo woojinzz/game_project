@@ -1,0 +1,37 @@
+{
+  "environment": "development",
+  "description": "개발 환경 설정",
+  "debug_mode": true,
+  "logging": {
+    "level": "DEBUG",
+    "enable_console": true,
+    "enable_file": true,
+    "log_directory": "logs/"
+  },
+  "simulation": {
+    "agent_count": 20,
+    "resource_count": 30,
+    "map_size": {
+      "width": 50,
+      "height": 30
+    },
+    "debug_visualization": true,
+    "performance_monitoring": true
+  },
+  "ai_settings": {
+    "decision_interval": 1.0,
+    "utility_logging": true,
+    "behavior_tracking": true
+  },
+  "ui": {
+    "stats_update_interval": 0.5,
+    "show_debug_info": true,
+    "enable_dev_panels": true
+  },
+  "development_tools": {
+    "hot_reload": true,
+    "profiler": true,
+    "agent_inspector": true,
+    "ai_debugger": true
+  }
+}

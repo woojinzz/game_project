@@ -1,0 +1,35 @@
+{
+  "environment": "production",
+  "description": "배포 환경 설정",
+  "debug_mode": false,
+  "logging": {
+    "level": "WARNING",
+    "enable_console": false,
+    "enable_file": false
+  },
+  "simulation": {
+    "agent_count": 20,
+    "resource_count": 30,
+    "map_size": {
+      "width": 50,
+      "height": 30
+    },
+    "debug_visualization": false,
+    "performance_monitoring": false
+  },
+  "ai_settings": {
+    "decision_interval": 1.0,
+    "utility_logging": false,
+    "behavior_tracking": false
+  },
+  "ui": {
+    "stats_update_interval": 0.5,
+    "show_debug_info": false,
+    "enable_dev_panels": false
+  },
+  "optimization": {
+    "max_fps": 60,
+    "vsync": true,
+    "memory_cleanup_interval": 30.0
+  }
+}

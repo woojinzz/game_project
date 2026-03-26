@@ -1,0 +1,40 @@
+{
+  "environment": "testing",
+  "description": "테스트 환경 설정",
+  "debug_mode": true,
+  "logging": {
+    "level": "INFO",
+    "enable_console": true,
+    "enable_file": true,
+    "log_directory": "logs/tests/"
+  },
+  "simulation": {
+    "agent_count": 10,
+    "resource_count": 15,
+    "map_size": {
+      "width": 25,
+      "height": 15
+    },
+    "debug_visualization": true,
+    "performance_monitoring": true,
+    "deterministic_mode": true,
+    "random_seed": 12345
+  },
+  "ai_settings": {
+    "decision_interval": 0.5,
+    "utility_logging": true,
+    "behavior_tracking": true,
+    "fast_mode": true
+  },
+  "ui": {
+    "stats_update_interval": 0.1,
+    "show_debug_info": true,
+    "enable_dev_panels": true
+  },
+  "testing": {
+    "auto_screenshot": true,
+    "performance_benchmarks": true,
+    "ai_behavior_validation": true,
+    "stress_testing": false
+  }
+}

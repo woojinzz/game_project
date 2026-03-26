@@ -20,3 +20,40 @@ Thumbs.db
 # IDE ignores
 .vscode/
 .idea/
+
+# Security sensitive files
+config/environments/local.json
+*.key
+*.pem
+*.p12
+*.jks
+.env
+.env.local
+.env.*.local
+
+# API Keys and credentials
+**/api_keys.json
+**/credentials.json
+**/secrets.json
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Build artifacts
+build/
+dist/
+export/
+*.zip
+*.dmg
+*.exe
+
+# Development logs
+logs/
+*.log
+
+# Backup files
+*.backup
+*.bak
+*~
