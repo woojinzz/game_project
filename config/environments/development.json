@@ -1,6 +1,6 @@
 {
   "environment": "development",
-  "description": "개발 환경 설정",
+  "description": "개발 환경 설정 - AI 시뮬레이션과 창발 현상 관찰에 최적화",
   "debug_mode": true,
   "logging": {
     "level": "DEBUG",

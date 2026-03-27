@@ -3,7 +3,8 @@
     "allow": [
       "WebSearch",
       "WebFetch(domain:godotengine.org)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd comprehensive game development agent team configuration\n\n- Created 6-person specialist agent team for game development\n  * GameDesigner: Game mechanics and balancing\n  * AIEngineer: Utility AI system optimization  \n  * SystemsArchitect: Architecture and performance\n  * UIUXDesigner: Interface and user experience\n  * QAAnalyst: Quality assurance and testing\n  * DataScientist: Data analysis and insights\n\n- Environment-specific configuration system\n  * Development: Full debugging and monitoring\n  * Production: Optimized performance settings\n  * Testing: Deterministic testing environment\n  * Local template: Personal settings with security\n\n- Security enhancements in .gitignore\n  * API keys and credentials protection\n  * Database connection strings\n  * Personal configuration files\n  * Build artifacts and logs\n\n- ConfigManager integration for dynamic settings\n  * Runtime environment loading\n  * Centralized configuration management\n  * GameManager integration\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

@@ -18,10 +18,16 @@ var simulation_speed = 1.0
 var total_conflicts = 0
 var total_trades = 0
 
+var emergence_tracker: EmergentBehaviorTracker
+var observer_controls: ObserverControls
+
 func _ready():
 	# Load configuration
 	ConfigManager.load_environment("development")
 	ConfigManager.apply_to_game_manager(self)
+	
+	# Initialize emergence tracker
+	emergence_tracker = EmergentBehaviorTracker.new()
 	
 	setup_tilemap()
 	spawn_resources()
@@ -114,6 +120,7 @@ func _process(delta):
 	update_simulation(delta)
 	update_stats()
 	handle_conflicts()
+	track_emergent_behavior(delta)
 
 func update_simulation(delta):
 	Engine.time_scale = simulation_speed
@@ -144,6 +151,47 @@ func handle_conflicts():
 func record_trade():
 	total_trades += 1
 
+func track_emergent_behavior(delta):
+	if emergence_tracker:
+		for agent in agents:
+			if is_instance_valid(agent):
+				emergence_tracker.track_agent_behavior(agent, delta)
+
 func update_stats():
 	if stats_panel:
 		stats_panel.update_stats(agents, resources)
+		
+		# 창발 현상 정보도 전달
+		if emergence_tracker:
+			var emergence_summary = emergence_tracker.get_emergence_summary()
+			stats_panel.update_emergence_info(emergence_summary)
+
+func reset_simulation():
+	print("🔄 시뮬레이션 초기화 중...")
+	
+	# 기존 에이전트와 자원 제거
+	for agent in agents:
+		if is_instance_valid(agent):
+			agent.queue_free()
+	for resource in resources:
+		if is_instance_valid(resource):
+			resource.queue_free()
+	
+	agents.clear()
+	resources.clear()
+	
+	# 통계 초기화
+	total_conflicts = 0
+	total_trades = 0
+	
+	if stats_panel:
+		stats_panel.reset_stats()
+	
+	if emergence_tracker:
+		emergence_tracker.reset()
+	
+	# 새로운 시뮬레이션 시작
+	spawn_resources()
+	spawn_agents()
+	
+	print("✅ 시뮬레이션이 초기화되었습니다")
