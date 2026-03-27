@@ -34,8 +34,17 @@ func track_agent_behavior(agent, delta_time):
 	if not agent or not is_instance_valid(agent):
 		return
 	
+	var agent_id = agent.get_instance_id()
+	# 유효하지 않은 ID 무시
+	if agent_id <= 0:
+		return
+	
+	# 에이전트 타입 확인 (우리가 만든 Agent 클래스인지)
+	if not agent.has_method("get_instance_id"):
+		return
+	
 	var behavior_data = {
-		"agent_id": agent.get_instance_id(),
+		"agent_id": agent_id,
 		"position": agent.global_position,
 		"action": agent.current_action,
 		"hunger": agent.hunger,
@@ -54,7 +63,12 @@ func track_agent_behavior(agent, delta_time):
 	detect_emergent_patterns()
 
 func update_social_network(agent):
+	if not is_instance_valid(agent):
+		return
+	
 	var agent_id = agent.get_instance_id()
+	if agent_id <= 0:
+		return
 	
 	if not social_networks.has(agent_id):
 		social_networks[agent_id] = {
@@ -68,20 +82,33 @@ func update_social_network(agent):
 		var nearby_agents = agent.game_manager.get_agents_in_range(agent.global_position, 60)
 		for nearby_agent in nearby_agents:
 			if nearby_agent != agent and is_instance_valid(nearby_agent):
-				update_agent_relationship(agent_id, nearby_agent.get_instance_id(), agent, nearby_agent)
+				var other_id = nearby_agent.get_instance_id()
+				if other_id > 0:
+					update_agent_relationship(agent_id, other_id, agent, nearby_agent)
 
 func update_agent_relationship(agent_id, other_id, agent, other_agent):
-	if not social_networks[agent_id].trust_relationships.has(other_id):
-		social_networks[agent_id].trust_relationships[other_id] = agent.trust
-		social_networks[agent_id].interaction_frequency[other_id] = 1
+	# 매우 안전한 딕셔너리 접근
+	if not social_networks.has(agent_id):
+		return
+	
+	var agent_network = social_networks.get(agent_id, {})
+	if not agent_network.has("trust_relationships") or not agent_network.has("interaction_frequency"):
+		return
+	
+	var trust_relationships = agent_network.get("trust_relationships", {})
+	var interaction_frequency = agent_network.get("interaction_frequency", {})
+	
+	if not trust_relationships.has(other_id):
+		trust_relationships[other_id] = agent.trust
+		interaction_frequency[other_id] = 1
 	else:
 		# 상호작용 빈도 증가
-		social_networks[agent_id].interaction_frequency[other_id] += 1
+		interaction_frequency[other_id] = interaction_frequency.get(other_id, 0) + 1
 		
 		# 신뢰도 관계 업데이트
-		var current_trust = social_networks[agent_id].trust_relationships[other_id]
+		var current_trust = trust_relationships.get(other_id, 0.0)
 		var new_trust = (current_trust + agent.trust) / 2.0
-		social_networks[agent_id].trust_relationships[other_id] = new_trust
+		trust_relationships[other_id] = new_trust
 
 func detect_emergent_patterns():
 	detect_spontaneous_grouping()
@@ -92,7 +119,7 @@ func detect_emergent_patterns():
 	detect_conflict_spiral()
 
 func detect_spontaneous_grouping():
-	if behavior_history.size() < 50:
+	if behavior_history.size() < 30:  # 기준을 낮춰서 더 빨리 시작
 		return
 	
 	var recent_positions = {}
@@ -102,8 +129,10 @@ func detect_spontaneous_grouping():
 	# 최근 위치들을 분석
 	for i in range(max(0, behavior_history.size() - 50), behavior_history.size()):
 		var data = behavior_history[i]
-		var agent_id = data.agent_id
-		recent_positions[agent_id] = data.position
+		# 안전한 딕셔너리 접근
+		if data.has("agent_id") and data.has("position"):
+			var agent_id = data.agent_id
+			recent_positions[agent_id] = data.position
 	
 	var groups = find_spatial_clusters(recent_positions.values(), group_threshold)
 	
@@ -123,9 +152,10 @@ func detect_resource_monopoly():
 	
 	for i in range(max(0, behavior_history.size() - 100), behavior_history.size()):
 		var data = behavior_history[i]
-		if data.action == 1:  # SEEK_FOOD
+		if data.has("action") and data.has("agent_id") and data.action == 1:  # SEEK_FOOD
 			var agent_id = data.agent_id
-			resource_access[agent_id] = resource_access.get(agent_id, 0) + 1
+			if agent_id > 0:
+				resource_access[agent_id] = resource_access.get(agent_id, 0) + 1
 	
 	if resource_access.size() > 0:
 		var total_access = 0
@@ -149,13 +179,23 @@ func detect_social_hierarchy():
 	var hierarchy_indicators = {}
 	
 	for agent_id in social_networks:
-		var network = social_networks[agent_id]
+		if agent_id <= 0:
+			continue
+			
+		var network = social_networks.get(agent_id, {})
+		if not network.has("trust_relationships") or not network.has("interaction_frequency"):
+			continue
+			
+		var trust_relationships = network.get("trust_relationships", {})
+		var interaction_frequency = network.get("interaction_frequency", {})
 		var influence_score = 0.0
 		
 		# 연결 수와 신뢰도 기반 영향력 계산
-		for other_id in network.trust_relationships:
-			var trust = network.trust_relationships[other_id]
-			var frequency = network.interaction_frequency[other_id]
+		for other_id in trust_relationships:
+			if other_id <= 0:
+				continue
+			var trust = trust_relationships.get(other_id, 0.0)
+			var frequency = interaction_frequency.get(other_id, 1)
 			influence_score += trust * log(frequency + 1)
 		
 		hierarchy_indicators[agent_id] = influence_score
@@ -178,13 +218,15 @@ func detect_cultural_transmission():
 	
 	for i in range(max(0, behavior_history.size() - 200), behavior_history.size()):
 		var data = behavior_history[i]
-		var action = data.action
-		var agent_id = data.agent_id
-		
-		if not behavior_spreading.has(action):
-			behavior_spreading[action] = {}
-		
-		behavior_spreading[action][agent_id] = true
+		if data.has("action") and data.has("agent_id"):
+			var action = data.action
+			var agent_id = data.agent_id
+			
+			if agent_id > 0:
+				if not behavior_spreading.has(action):
+					behavior_spreading[action] = {}
+				
+				behavior_spreading[action][agent_id] = true
 	
 	for action in behavior_spreading:
 		var agent_count = behavior_spreading[action].size()
@@ -200,7 +242,7 @@ func detect_cooperation_cascade():
 	
 	for i in range(max(0, behavior_history.size() - 50), behavior_history.size()):
 		var data = behavior_history[i]
-		if data.action == 3:  # TRADE
+		if data.has("action") and data.action == 3:  # TRADE
 			recent_trades += 1
 	
 	if recent_trades >= trade_threshold:
@@ -215,7 +257,7 @@ func detect_conflict_spiral():
 	
 	for i in range(max(0, behavior_history.size() - 50), behavior_history.size()):
 		var data = behavior_history[i]
-		if data.action == 4:  # FLEE
+		if data.has("action") and data.action == 4:  # FLEE
 			recent_conflicts += 1
 	
 	if recent_conflicts >= conflict_threshold:
@@ -293,6 +335,75 @@ func get_emergence_summary() -> Dictionary:
 		"behavior_records": behavior_history.size(),
 		"social_connections": social_networks.size()
 	}
+
+func cleanup_agent_data(agent_id: int):
+	if agent_id <= 0:
+		return
+	
+	# social_networks에서 해당 에이전트 데이터 완전 제거
+	if social_networks.has(agent_id):
+		social_networks.erase(agent_id)
+		print("🧹 social_networks에서 에이전트 ", agent_id, " 제거")
+	
+	# 다른 에이전트들의 관계에서도 해당 에이전트 제거 (더 안전한 방식)
+	var agent_ids_to_clean = social_networks.keys().duplicate()
+	for other_agent_id in agent_ids_to_clean:
+		if other_agent_id == agent_id:
+			continue
+			
+		var network = social_networks.get(other_agent_id, {})
+		
+		# trust_relationships 정리
+		if network.has("trust_relationships"):
+			var trust_rels = network.get("trust_relationships", {})
+			if trust_rels.has(agent_id):
+				trust_rels.erase(agent_id)
+		
+		# interaction_frequency 정리
+		if network.has("interaction_frequency"):
+			var freq_data = network.get("interaction_frequency", {})
+			if freq_data.has(agent_id):
+				freq_data.erase(agent_id)
+		
+		# connections 정리
+		if network.has("connections"):
+			var connections = network.get("connections", [])
+			for i in range(connections.size() - 1, -1, -1):
+				if connections[i] == agent_id:
+					connections.remove_at(i)
+	
+	# behavior_history에서 해당 에이전트 기록 제거 (더 안전한 방식)
+	var history_size = behavior_history.size()
+	for i in range(history_size - 1, -1, -1):
+		if i < behavior_history.size():  # 인덱스 재검증
+			var data = behavior_history[i]
+			if data.has("agent_id") and data.agent_id == agent_id:
+				behavior_history.remove_at(i)
+	
+	print("🧹 에이전트 ", agent_id, " 데이터 완전 정리 완료")
+
+func cleanup_invalid_agent_references(game_manager):
+	# 정기적으로 무효한 에이전트 참조 정리
+	if not game_manager:
+		return
+		
+	var valid_agent_ids = {}
+	
+	# GameManager에서 유효한 에이전트 ID들 수집
+	for agent in game_manager.agents:
+		if is_instance_valid(agent):
+			var agent_id = agent.get_instance_id()
+			if agent_id > 0:
+				valid_agent_ids[agent_id] = true
+	
+	# social_networks에서 무효한 에이전트 제거
+	var networks_to_remove = []
+	for agent_id in social_networks:
+		if not valid_agent_ids.has(agent_id):
+			networks_to_remove.append(agent_id)
+	
+	for invalid_id in networks_to_remove:
+		cleanup_agent_data(invalid_id)
 
 func reset():
 	behavior_history.clear()

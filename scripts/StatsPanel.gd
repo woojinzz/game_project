@@ -13,9 +13,35 @@ var trade_count = 0
 var update_timer = 0.0
 var update_interval = 0.5
 
+# 부족 통계 라벨들
+var tribe_stats_labels = {}
+
 func _ready():
 	modulate = Color(0.1, 0.1, 0.1, 0.8)
+	setup_responsive_size()
 	setup_korean_ui()
+
+func setup_responsive_size():
+	# 화면 크기에 반응하는 크기 조정
+	var viewport_size = get_viewport().size
+	var scale = min(1.0, min(viewport_size.x / 1280.0, viewport_size.y / 720.0))
+	size = Vector2(250 * scale, viewport_size.y)
+	
+	# 폰트 크기 조정
+	var font_scale = max(0.7, scale)
+	for child in get_children():
+		adjust_font_sizes_recursive(child, font_scale)
+
+func adjust_font_sizes_recursive(node: Node, font_scale: float):
+	if node is Label:
+		var label = node as Label
+		var base_font_size = 14
+		if label.name == "Title":
+			base_font_size = 16
+		label.add_theme_font_size_override("font_size", max(8, int(base_font_size * font_scale)))
+	
+	for child in node.get_children():
+		adjust_font_sizes_recursive(child, font_scale)
 
 func setup_korean_ui():
 	var title_label = $VBoxContainer/Title
@@ -43,6 +69,9 @@ func setup_korean_ui():
 		conflict_count_label.text = "⚔️ 감지된 충돌: 0회"
 	if trade_count_label:
 		trade_count_label.text = "💱 성공한 교역: 0회"
+		
+	# 부족 통계 라벨 생성 (동적으로 추가)
+	create_tribe_stats_labels()
 
 func update_stats(agents, resources):
 	update_timer += get_process_delta_time()
@@ -164,6 +193,44 @@ func calculate_social_cohesion(trading, fleeing) -> float:
 		return 0.5
 	
 	return float(trading) / total_social_actions
+
+func create_tribe_stats_labels():
+	# HSeparator 추가
+	var tribe_separator = HSeparator.new()
+	$VBoxContainer.add_child(tribe_separator)
+	
+	# 부족 제목
+	var tribe_title = Label.new()
+	tribe_title.text = "🏘️ 부족별 현황"
+	tribe_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	$VBoxContainer.add_child(tribe_title)
+	
+	# 각 부족별 라벨 생성
+	var tribe_names = ["🔴 불꽃 부족", "🔵 물결 부족", "🟢 숲속 부족", "🟡 태양 부족"]
+	
+	for i in range(4):
+		var tribe_label = Label.new()
+		tribe_label.text = tribe_names[i] + ": 0마리"
+		$VBoxContainer.add_child(tribe_label)
+		tribe_stats_labels[i] = tribe_label
+
+func update_tribe_stats(game_manager):
+	if not game_manager or not game_manager.tribe_system:
+		return
+	
+	var tribe_stats = game_manager.tribe_system.get_tribe_statistics()
+	var tribe_icons = ["🔴", "🔵", "🟢", "🟡"]
+	
+	for tribe_type in tribe_stats:
+		var stats = tribe_stats[tribe_type]
+		var label = tribe_stats_labels.get(tribe_type)
+		
+		if label:
+			var icon = tribe_icons[tribe_type]
+			var text = icon + " " + stats.name + ": " + str(stats.member_count) + "마리"
+			if stats.member_count > 0:
+				text += " (신뢰:" + str(int(stats.avg_trust)) + ")"
+			label.text = text
 
 func update_emergence_info(emergence_summary: Dictionary):
 	# 창발 현상 정보 업데이트 (향후 UI 패널 확장 시 사용)
